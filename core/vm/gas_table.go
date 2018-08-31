@@ -475,3 +475,8 @@ func gasSwap(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem
 func gasDup(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize uint64) (uint64, error) {
 	return GasFastestStep, nil
 }
+
+func gasMerkleProve(gt params.GasTable, evm *EVM, contract *Contract, stack *Stack, mem *Memory, memorySize uint64) (uint64, error) {
+	return GasFastestStep, nil
+}
+

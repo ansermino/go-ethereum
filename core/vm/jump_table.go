@@ -962,5 +962,12 @@ func newFrontierInstructionSet() [256]operation {
 			valid:         true,
 			writes:        true,
 		},
+		MERKLEPROVE: {
+			execute:       opMerkleProve,
+			gasCost:       gasMerkleProve,
+			validateStack: makeStackFunc(3, 1),
+			memorySize:    memorySha3,
+			valid:         true,
+		},
 	}
 }
