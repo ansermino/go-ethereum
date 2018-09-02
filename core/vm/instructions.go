@@ -868,16 +868,17 @@ func opMerkleProve(pc *uint64, interpreter *EVMInterpreter, contract *Contract, 
 	proofLocation, leaf, root := stack.pop(), stack.pop(), stack.pop()
 	tmp := memory.Get(proofLocation.Int64(), big.NewInt(32).Int64())
 	proofLen := new(big.Int).SetBytes(tmp)
-
+	modRes := big.Int{}
 	// Ensure proof consists of 1 or more 32byte hash + 1byte left/right
-	if proofLen.Mod(proofLen, big.NewInt(33)) != big.NewInt(0) {
+
+	if modRes.Mod(proofLen, big.NewInt(33)).Cmp(big.NewInt(0)) != 0  {
 		return nil, errors.New("evm: MERKLEPROVE proof length invalid")
 	}
 
 	i := big.NewInt(33)
 	computedHash := leaf
-
-	for i.Cmp(proofLen) == -1 {
+	// While i <= length (cmp = 1 or cmp = 0)
+	for i.Cmp(proofLen) <= 0 {
 		// Load element from memory[proofLocation + i]
 		proofElement := memory.Get(proofLocation.Add(proofLocation, i).Int64(), big.NewInt(32).Int64())
 		// Load left/right from memory[proofLocation + i - 1]

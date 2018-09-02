@@ -219,7 +219,7 @@ const (
 
 // SHYFT OPCODES
 const (
-	MERKLEPROVE = 0xe3
+	MERKLEPROVE OpCode = 0xe3
 )
 
 // Since the opcodes aren't all in order we can't use a regular slice.
