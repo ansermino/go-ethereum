@@ -875,6 +875,8 @@ func opMerkleProve(pc *uint64, interpreter *EVMInterpreter, contract *Contract, 
 		return nil, errors.New("evm: MERKLEPROVE proof length invalid")
 	}
 
+	fmt.Printf("MerkleProve -- len: %d, leaf %d, root %d\n", proofLen, leaf, root)
+
 	i := big.NewInt(33)
 	computedHash := leaf
 	// While i <= length (cmp = 1 or cmp = 0)
