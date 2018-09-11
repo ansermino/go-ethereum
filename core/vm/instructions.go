@@ -865,14 +865,14 @@ func opSuicide(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memo
 // SHYFT OPCODES
 
 func opMerkleProve(pc *uint64, interpreter *EVMInterpreter, contract *Contract, memory *Memory, stack *Stack) ([]byte, error) {
-	proofLocation, leaf, root := stack.pop(), stack.pop(), stack.pop()
-	tmp := memory.Get(proofLocation.Int64(), big.NewInt(32).Int64())
-	proofLen := new(big.Int).SetBytes(tmp)
+	proofStart, leaf, root := stack.pop(), stack.pop(), stack.pop()
+	proofLen := new(big.Int).SetBytes(memory.Get(proofStart.Int64(), big.NewInt(32).Int64()))
 	modRes := big.Int{}
+	fmt.Printf("proofLen: %d proofStart: %d\n", proofLen, proofStart)
 	// Ensure proof consists of 1 or more 32byte hash + 1byte left/right
-
 	if modRes.Mod(proofLen, big.NewInt(33)).Cmp(big.NewInt(0)) != 0  {
-		return nil, errors.New("evm: MERKLEPROVE proof length invalid")
+		//TODO: Cause revert, don't throw error
+		return nil, errors.New(fmt.Sprintf("evm: MERKLEPROVE proof length invalid: %d", proofLen))
 	}
 
 	fmt.Printf("MerkleProve -- len: %d, leaf %d, root %d\n", proofLen, leaf, root)
@@ -881,10 +881,14 @@ func opMerkleProve(pc *uint64, interpreter *EVMInterpreter, contract *Contract, 
 	computedHash := leaf
 	// While i <= length (cmp = 1 or cmp = 0)
 	for i.Cmp(proofLen) <= 0 {
-		// Load element from memory[proofLocation + i]
-		proofElement := memory.Get(proofLocation.Add(proofLocation, i).Int64(), big.NewInt(32).Int64())
-		// Load left/right from memory[proofLocation + i - 1]
-		isRight := new(big.Int).SetBytes(memory.Get(proofLocation.Add(proofLocation, i.Sub(i, big.NewInt(1))).Int64(), big.NewInt(1).Int64()))
+		// Load element from memory[proofStart + i]
+		proofLocation := new(big.Int)
+		proofLocation.Add(proofStart, i)
+		proofElement := memory.Get(proofLocation.Int64(), big.NewInt(32).Int64())
+		// Load left/right from memory[proofStart + i - 1]
+		isRightLocation := new(big.Int)
+		isRightLocation.Sub(proofLocation, big.NewInt(1))
+		isRight := new(big.Int).SetBytes(memory.Get(isRightLocation.Int64(), big.NewInt(1).Int64()))
 
 		if isRight.Cmp(big.NewInt(1)) == 0 {
 			computedHash = new(big.Int).SetBytes(crypto.Keccak256(computedHash.Bytes(), proofElement))
@@ -892,6 +896,7 @@ func opMerkleProve(pc *uint64, interpreter *EVMInterpreter, contract *Contract, 
 			computedHash = new(big.Int).SetBytes(crypto.Keccak256(proofElement, computedHash.Bytes()))
 		}
 		i.Add(i, big.NewInt(33))
+		fmt.Printf("proofElement: %x proofLocation: %d isRight: %d new i: %d \n", proofElement, proofLocation, isRight, i)
 	}
 
 	if computedHash.Cmp(root) == 0 {
